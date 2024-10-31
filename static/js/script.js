@@ -136,12 +136,89 @@ async function generateNotes() {
     toggleLoading(false);
 }
 
+function formatQuiz(quizData) {
+    let html = '<div class="quiz-container">';
+    
+    // Add quiz title
+    html += '<h2>Generated Quiz</h2>';
+    
+    // Format each question
+    quizData.questions.forEach((q, index) => {
+        html += `
+            <div class="quiz-question">
+                <h3>Question ${index + 1}</h3>
+                <p class="question-text">${q.question}</p>
+                
+                ${q.type === 'multiple_choice' ? `
+                    <div class="options">
+                        ${q.options.map(option => `
+                            <div class="option">
+                                <input type="radio" 
+                                       id="q${index}_${option}" 
+                                       name="q${index}" 
+                                       value="${option}">
+                                <label for="q${index}_${option}">${option}</label>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : `
+                    <div class="short-answer">
+                        <input type="text" placeholder="Enter your answer">
+                    </div>
+                `}
+                
+                <div class="explanation hidden">
+                    <h4>Explanation:</h4>
+                    <p>${q.explanation}</p>
+                    <p><strong>Correct Answer:</strong> ${q.correct_answer}</p>
+                </div>
+                
+                <button onclick="toggleExplanation(${index})" class="show-explanation">
+                    Show Explanation
+                </button>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    return html;
+}
+
+// Add this function to handle showing/hiding explanations
+function toggleExplanation(questionIndex) {
+    const explanationDiv = document.querySelectorAll('.explanation')[questionIndex];
+    const button = document.querySelectorAll('.show-explanation')[questionIndex];
+    
+    if (explanationDiv.classList.contains('hidden')) {
+        explanationDiv.classList.remove('hidden');
+        button.textContent = 'Hide Explanation';
+    } else {
+        explanationDiv.classList.add('hidden');
+        button.textContent = 'Show Explanation';
+    }
+}
+
 // Display response
 function displayResponse(content) {
     const responseSection = document.getElementById('response');
     const responseContent = document.getElementById('response-content');
     
-    responseContent.textContent = content;
+    // Try to parse as JSON first (for quizzes)
+    try {
+        const quizData = JSON.parse(content);
+        if (quizData.questions) {
+            // It's a quiz, format it accordingly
+            const formattedQuiz = formatQuiz(quizData);
+            responseContent.innerHTML = formattedQuiz;
+        } else {
+            // Regular markdown content
+            responseContent.innerHTML = marked.parse(content);
+        }
+    } catch (e) {
+        // Not JSON, treat as regular markdown
+        responseContent.innerHTML = marked.parse(content);
+    }
+    
     responseSection.classList.remove('hidden');
     responseSection.scrollIntoView({ behavior: 'smooth' });
 }

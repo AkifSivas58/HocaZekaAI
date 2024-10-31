@@ -48,14 +48,15 @@ class EducationAI:
         
     def explain_topic(self, topic: str, grade_level: Optional[str] = None) -> AIResponse:
         system_instruction = """
-        You are an educational assistant specialized in explaining complex topics.
+        You are an educational assistant specialized in explaining complex topics to students.
         Follow these guidelines:
         1. Start with a clear, grade-appropriate definition
         2. Break down complex concepts into digestible parts
-        3. Use relevant real-world examples
-        4. Address common misconceptions
-        5. Include 2-3 key takeaways
-        6. Add suggested further reading or exploration topics
+        3. Make sure to include common formulas or similar knowledge if exists.
+        4. Use relevant real-world examples
+        5. Address common misconceptions
+        6. Include 2-3 key takeaways
+        7. Add suggested further reading or exploration topics
         """
         
         prompt = f"""
@@ -69,17 +70,18 @@ class EducationAI:
 
     def generate_quiz(self, topic: str, difficulty: str, num_questions: int = 5) -> AIResponse:
         system_instruction = """
-        You are a professional quiz generator. Create balanced assessments that:
+        You are a professional quiz generator for students. Create balanced assessments that:
         1. Test different cognitive levels (recall, understanding, application)
-        2. Include a mix of question types
-        3. Provide clear, educational explanations
-        4. Include difficulty-appropriate distractors for multiple choice
+        2. Make the students use their knowledge they learnt in that topic and ask challenging questions.
+        3. Include a mix of question types
+        4. Provide clear, educational explanations
+        5. Include difficulty-appropriate distractors for multiple choice
         
-        Format the output as JSON with the following structure:
+        IMPORTANT: You must format your response as valid JSON following this exact structure:
         {
             "questions": [
                 {
-                    "type": "multiple_choice|short_answer",
+                    "type": "multiple_choice",
                     "question": "question text",
                     "correct_answer": "answer",
                     "options": ["option1", "option2", "option3", "option4"],
@@ -87,11 +89,12 @@ class EducationAI:
                 }
             ]
         }
+        Do not include any other text outside of this JSON structure.
         """
         
         prompt = f"""
         Generate a {difficulty} difficulty quiz about {topic} with {num_questions} questions.
-        Ensure questions progress from basic understanding to application.
+        Remember to return ONLY valid JSON following the specified structure.
         """
         
         response = self.ai.generate_response(prompt, system_instruction)
@@ -99,14 +102,24 @@ class EducationAI:
         # Validate JSON structure
         try:
             quiz_data = json.loads(response.content)
-            return AIResponse(content=response.content, metadata={"question_count": len(quiz_data["questions"])})
         except json.JSONDecodeError:
-            return AIResponse(content="", error="Failed to generate properly formatted quiz")
+            try:
+                # Look for JSON-like structure in the text
+                import re
+                json_match = re.search(r'({[\s\S]*})', response.content)
+                if json_match:
+                    quiz_data = json.loads(json_match.group(1))
+                else:
+                    return AIResponse(content="", error="Failed to generate properly formatted quiz")
+            except (json.JSONDecodeError, AttributeError):
+                return AIResponse(content="", error="Failed to generate properly formatted quiz")
+
+        return AIResponse(content=json.dumps(quiz_data, indent=2), metadata={"question_count": len(quiz_data["questions"])})
 
     def generate_teaching_notes(self, topic: str, duration: Optional[str] = "60 minutes") -> AIResponse:
         system_instruction = """
-        You are a professional curriculum designer. Create comprehensive teaching notes that include:
-        1. Learning objectives (using Bloom's Taxonomy)
+        You are a professional curriculum designer for teachers to use in their lectures. Create comprehensive teaching notes that include:
+        1. Learning objectives
         2. Key concepts and definitions
         3. Suggested teaching activities and timings
         4. Discussion questions and prompts
