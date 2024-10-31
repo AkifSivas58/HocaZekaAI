@@ -4,248 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EduGenius AI</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <style>
-        .tab {
-            display: none;
-        }
-        .tab.active {
-            display: block;
-        }
-        .loading {
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
-        .quiz-question {
-            border-left: 4px solid #3B82F6;
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            background-color: #F3F4F6;
-            border-radius: 0.5rem;
-        }
-        .quiz-answer {
-            border-left: 4px solid #10B981;
-            margin-top: 0.5rem;
-            padding: 1rem;
-            background-color: #ECFDF5;
-            border-radius: 0.5rem;
-        }
-        .quiz-explanation {
-            border-left: 4px solid #8B5CF6;
-            margin-top: 0.5rem;
-            padding: 1rem;
-            background-color: #F5F3FF;
-            border-radius: 0.5rem;
-        }
-        .option {
-            padding: 0.5rem;
-            margin: 0.25rem 0;
-            border-radius: 0.25rem;
-            background-color: white;
-        }
-        .notes-section {
-            border-left: 4px solid #F59E0B;
-            margin-bottom: 1rem;
-            padding: 1rem;
-            background-color: #FFFBEB;
-            border-radius: 0.5rem;
-        }
-        .concept {
-            font-weight: bold;
-            color: #1F2937;
-        }
-    </style>
+    <link rel="stylesheet" href="..\static\css\styles.css">
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8 max-w-3xl">
-        <h1 class="text-3xl font-bold text-center mb-8">EduGenius AI Assistant</h1>
-        
-        <!-- Tab Buttons -->
-        <div class="flex space-x-4 mb-6">
-            <button onclick="showTab('notes')" class="flex-1 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                Generate Notes
-            </button>
-            <button onclick="showTab('quiz')" class="flex-1 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                Create Quiz
-            </button>
-            <button onclick="showTab('explain')" class="flex-1 bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
-                Explain Topic
-            </button>
-        </div>
+<body>
+    <div class="container">
+        <header>
+            <h1>EduGenius AI</h1>
+            <p>Your AI Teaching Assistant</p>
+        </header>
 
-        <!-- Notes Tab -->
-        <div id="notes" class="tab active">
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-xl font-semibold mb-4">Generate Teaching Notes</h2>
-                <textarea id="notesInput" class="w-full h-40 p-2 border rounded mb-4" 
-                    placeholder="Enter your topic or content here..."></textarea>
-                <button onclick="handleSubmit('summarize')" class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                    Generate Notes
-                </button>
-            </div>
-        </div>
+        <nav class="tabs">
+            <button class="tab-button active" data-tab="explain">Explain Topic</button>
+            <button class="tab-button" data-tab="quiz">Generate Quiz</button>
+            <button class="tab-button" data-tab="notes">Teaching Notes</button>
+        </nav>
 
-        <!-- Quiz Tab -->
-        <div id="quiz" class="tab">
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-xl font-semibold mb-4">Create Quiz</h2>
-                <select id="difficulty" class="w-full p-2 border rounded mb-4">
-                    <option value="easy">Easy</option>
-                    <option value="medium" selected>Medium</option>
-                    <option value="hard">Hard</option>
+        <main>
+            <!-- Explain Topic Section -->
+            <section id="explain" class="tab-content active">
+                <h2>Get Topic Explanation</h2>
+                <textarea id="explain-input" placeholder="Enter the topic you want to understand..."></textarea>
+                <select id="grade-level">
+                    <option value="">Select Grade Level (Optional)</option>
+                    <option value="elementary">Elementary School</option>
+                    <option value="middle">Middle School</option>
+                    <option value="high">High School</option>
+                    <option value="college">College</option>
                 </select>
-                <textarea id="quizInput" class="w-full h-40 p-2 border rounded mb-4" 
-                    placeholder="Enter your topic for quiz generation..."></textarea>
-                <button onclick="handleSubmit('generate-quiz')" class="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                    Generate Quiz
-                </button>
-            </div>
-        </div>
+                <button onclick="generateExplanation()">Get Explanation</button>
+            </section>
 
-        <!-- Explain Tab -->
-        <div id="explain" class="tab">
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-xl font-semibold mb-4">Explain Topic</h2>
-                <textarea id="explainInput" class="w-full h-40 p-2 border rounded mb-4" 
-                    placeholder="Enter the topic you want explained..."></textarea>
-                <button onclick="handleSubmit('explain')" class="w-full bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
-                    Get Explanation
-                </button>
-            </div>
-        </div>
+            <!-- Quiz Section -->
+            <section id="quiz" class="tab-content">
+                <h2>Generate Quiz</h2>
+                <textarea id="quiz-input" placeholder="Enter the topic for quiz generation..."></textarea>
+                <div class="difficulty-buttons">
+                    <button class="difficulty active" data-level="easy">Easy</button>
+                    <button class="difficulty" data-level="medium">Medium</button>
+                    <button class="difficulty" data-level="hard">Hard</button>
+                </div>
+                <div class="question-count">
+                    <label for="num-questions">Number of Questions:</label>
+                    <input type="number" id="num-questions" value="5" min="1" max="10">
+                </div>
+                <button onclick="generateQuiz()">Generate Quiz</button>
+            </section>
 
-        <!-- Response Section -->
-        <div id="response" class="mt-6 bg-white p-6 rounded-lg shadow-md hidden">
-            <h3 class="text-lg font-semibold mb-4">Response:</h3>
-            <div id="responseContent" class="space-y-4"></div>
+            <!-- Teaching Notes Section -->
+            <section id="notes" class="tab-content">
+                <h2>Generate Teaching Notes</h2>
+                <textarea id="notes-input" placeholder="Enter the topic for teaching notes..."></textarea>
+                <select id="lesson-duration">
+                    <option value="30">30 Minutes</option>
+                    <option value="45">45 Minutes</option>
+                    <option value="60" selected>60 Minutes</option>
+                    <option value="90">90 Minutes</option>
+                </select>
+                <button onclick="generateNotes()">Generate Notes</button>
+            </section>
+
+            <!-- Response Section -->
+            <section id="response" class="hidden">
+                <div class="response-header">
+                    <h3>Generated Content</h3>
+                    <div class="response-actions">
+                        <button onclick="copyContent()">Copy</button>
+                        <button onclick="downloadContent()">Download</button>
+                    </div>
+                </div>
+                <div id="response-content"></div>
+            </section>
+        </main>
+
+        <div id="loading" class="hidden">
+            <div class="spinner"></div>
         </div>
     </div>
 
-    <script>
-        function showTab(tabId) {
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.getElementById(tabId).classList.add('active');
-        }
-
-        function formatResponse(text, endpoint) {
-            const container = document.createElement('div');
-            
-            if (endpoint === 'generate-quiz') {
-                // Format quiz content
-                const sections = text.split(/(?=\*\*\d+\.|\#\#)/g);
-                
-                sections.forEach(section => {
-                    if (section.trim()) {
-                        if (section.startsWith('##')) {
-                            // Title section
-                            const titleDiv = document.createElement('div');
-                            titleDiv.className = 'text-xl font-bold mb-4';
-                            titleDiv.textContent = section.replace(/\*\*/g, '').replace('##', '').trim();
-                            container.appendChild(titleDiv);
-                        } else {
-                            // Question section
-                            const questionDiv = document.createElement('div');
-                            questionDiv.className = 'quiz-question';
-                            
-                            // Split into question, options, answer, and explanation
-                            const parts = section.split(/\*\*(?:Answer|Explanation):/g);
-                            
-                            // Question and options
-                            const questionPart = document.createElement('div');
-                            questionPart.className = 'mb-3';
-                            questionPart.innerHTML = parts[0].replace(/\*\*/g, '').trim()
-                                .split('\n')
-                                .map(line => {
-                                    if (line.match(/^[a-d]\)/)) {
-                                        return `<div class="option">${line}</div>`;
-                                    }
-                                    return line;
-                                })
-                                .join('<br>');
-                            questionDiv.appendChild(questionPart);
-                            
-                            // Answer
-                            if (parts[1]) {
-                                const answerDiv = document.createElement('div');
-                                answerDiv.className = 'quiz-answer';
-                                answerDiv.innerHTML = `<strong>Answer:</strong> ${parts[1].trim()}`;
-                                questionDiv.appendChild(answerDiv);
-                            }
-                            
-                            // Explanation
-                            if (parts[2]) {
-                                const explainDiv = document.createElement('div');
-                                explainDiv.className = 'quiz-explanation';
-                                explainDiv.innerHTML = `<strong>Explanation:</strong> ${parts[2].trim()}`;
-                                questionDiv.appendChild(explainDiv);
-                            }
-                            
-                            container.appendChild(questionDiv);
-                        }
-                    }
-                });
-            } else {
-                // Format notes and explanations content
-                const sections = text.split(/(?=\d\.|•)/g);
-                sections.forEach(section => {
-                    if (section.trim()) {
-                        const noteDiv = document.createElement('div');
-                        noteDiv.className = 'notes-section';
-                        noteDiv.innerHTML = section
-                            .replace(/\*\*([^*]+)\*\*/g, '<span class="concept">$1</span>')
-                            .trim();
-                        container.appendChild(noteDiv);
-                    }
-                });
-            }
-            
-            return container;
-        }
-
-        async function handleSubmit(endpoint) {
-            const inputId = endpoint === 'generate-quiz' ? 'quizInput' : 
-                           endpoint === 'explain' ? 'explainInput' : 'notesInput';
-            
-            const input = document.getElementById(inputId).value;
-            if (!input.trim()) return;
-
-            const button = event.target;
-            const originalText = button.innerText;
-            button.innerText = 'Processing...';
-            button.classList.add('loading');
-            
-            try {
-                const data = {
-                    text: input,
-                    difficulty: endpoint === 'generate-quiz' ? 
-                        document.getElementById('difficulty').value : undefined
-                };
-
-                const response = await fetch(`/${endpoint}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-                
-                document.getElementById('response').classList.remove('hidden');
-                const responseContent = document.getElementById('responseContent');
-                responseContent.innerHTML = '';
-                responseContent.appendChild(formatResponse(result.response, endpoint));
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('response').classList.remove('hidden');
-                document.getElementById('responseContent').innerText = 'An error occurred. Please try again.';
-            } finally {
-                button.innerText = originalText;
-                button.classList.remove('loading');
-            }
-        }
-    </script>
+    <script src="..\static\js\script.js"></script>
 </body>
 </html>
