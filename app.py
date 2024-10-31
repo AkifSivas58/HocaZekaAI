@@ -68,23 +68,22 @@ class EducationAI:
         
         return self.ai.generate_response(prompt, system_instruction)
 
-    def generate_quiz(self, topic: str, difficulty: str, num_questions: int = 5) -> AIResponse:
+    def generate_quiz(self, topic: str, question_types: str, difficulty: str, num_questions: int = 5) -> AIResponse:
         system_instruction = """
         You are a professional quiz generator for students. Create balanced assessments that:
         1. Test different cognitive levels (recall, understanding, application)
         2. Make the students use their knowledge they learnt in that topic and ask challenging questions.
-        3. Include a mix of question types
-        4. Provide clear, educational explanations
-        5. Include difficulty-appropriate distractors for multiple choice
+        3. Provide clear, educational explanations
+        4. Include difficulty-appropriate distractors for multiple choice
         
         IMPORTANT: You must format your response as valid JSON following this exact structure:
         {
             "questions": [
                 {
-                    "type": "multiple_choice",
+                    "type": "multiple_choice", // or "open_ended" or "true_false" 
                     "question": "question text",
                     "correct_answer": "answer",
-                    "options": ["option1", "option2", "option3", "option4"],
+                    "options": ["option1", "option2", "option3", "option4"], // only for multiple_choice
                     "explanation": "explanation text"
                 }
             ]
@@ -94,6 +93,10 @@ class EducationAI:
         
         prompt = f"""
         Generate a {difficulty} difficulty quiz about {topic} with {num_questions} questions.
+        Questions should be of type: {question_types}
+        For true/false questions, provide only two options: "True" and "False".
+        For open-ended questions, do not provide options but include a clear correct answer.
+
         Remember to return ONLY valid JSON following the specified structure.
         """
         
@@ -159,7 +162,8 @@ def generate_quiz():
     response = edu_ai.generate_quiz(
         topic=data["text"],
         difficulty=data.get("difficulty", "medium"),
-        num_questions=data.get("num_questions", 5)
+        num_questions=data.get("num_questions", 5),
+        question_types=data.get("question_types", "true_false")
     )
     if response.error:
         return jsonify({"error": response.error}), 500

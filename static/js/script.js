@@ -102,7 +102,8 @@ async function generateQuiz() {
     const data = {
         text: topic,
         difficulty: selectedDifficulty,
-        num_questions: document.getElementById('num-questions').value
+        num_questions: document.getElementById('num-questions').value,
+        question_types: document.getElementById('question-types').value  // Pass the selected type
     };
 
     const response = await makeAPICall('/api/generate-quiz', data);
@@ -138,14 +139,12 @@ async function generateNotes() {
 
 function formatQuiz(quizData) {
     let html = '<div class="quiz-container">';
-    
-    // Add quiz title
     html += '<h2>Generated Quiz</h2>';
     
     // Format each question
     quizData.questions.forEach((q, index) => {
         html += `
-            <div class="quiz-question">
+            <div class="quiz-question" data-question-index="${index}">
                 <h3>Question ${index + 1}</h3>
                 <p class="question-text">${q.question}</p>
                 
@@ -156,32 +155,126 @@ function formatQuiz(quizData) {
                                 <input type="radio" 
                                        id="q${index}_${option}" 
                                        name="q${index}" 
-                                       value="${option}">
+                                       value="${option}"
+                                       onchange="checkAnswer(${index}, '${option}', '${q.correct_answer}')">
                                 <label for="q${index}_${option}">${option}</label>
                             </div>
                         `).join('')}
                     </div>
                 ` : `
                     <div class="short-answer">
-                        <input type="text" placeholder="Enter your answer">
+                        <input type="text" 
+                               placeholder="Enter your answer"
+                               onkeyup="checkShortAnswer(${index}, '${q.correct_answer}', event)">
+                        <button onclick="submitShortAnswer(${index}, '${q.correct_answer}')" class="submit-answer">
+                            Submit Answer
+                        </button>
                     </div>
                 `}
                 
-                <div class="explanation hidden">
-                    <h4>Explanation:</h4>
-                    <p>${q.explanation}</p>
-                    <p><strong>Correct Answer:</strong> ${q.correct_answer}</p>
+                <div class="feedback hidden" id="feedback-${index}">
+                    <div class="feedback-content"></div>
                 </div>
                 
-                <button onclick="toggleExplanation(${index})" class="show-explanation">
-                    Show Explanation
-                </button>
+                <div class="explanation hidden" id="explanation-${index}">
+                    <h4>Explanation:</h4>
+                    <p>${q.explanation}</p>
+                </div>
             </div>
         `;
     });
+
+    html += `
+        <div class="quiz-summary hidden" id="quiz-summary">
+            <h3>Quiz Summary</h3>
+            <p>Score: <span id="quiz-score">0</span>/${quizData.questions.length}</p>
+            <button onclick="resetQuiz()" class="reset-quiz">Reset Quiz</button>
+        </div>
+    `;
     
     html += '</div>';
     return html;
+}
+
+// Function to check multiple choice answers
+function checkAnswer(questionIndex, selectedAnswer, correctAnswer) {
+    const feedbackDiv = document.getElementById(`feedback-${questionIndex}`);
+    const feedbackContent = feedbackDiv.querySelector('.feedback-content');
+    const explanationDiv = document.getElementById(`explanation-${questionIndex}`);
+    const questionDiv = feedbackDiv.closest('.quiz-question');
+    
+    // Remove previous feedback classes
+    questionDiv.classList.remove('correct', 'incorrect');
+    
+    const isCorrect = selectedAnswer === correctAnswer;
+    
+    // Add new feedback class
+    questionDiv.classList.add(isCorrect ? 'correct' : 'incorrect');
+    
+    // Show feedback
+    feedbackContent.innerHTML = isCorrect ? 
+        '<span class="correct-answer">✓ Correct!</span>' : 
+        `<span class="incorrect-answer">✗ Incorrect. The correct answer is: ${correctAnswer}</span>`;
+    
+    feedbackDiv.classList.remove('hidden');
+    explanationDiv.classList.remove('hidden');
+    
+    updateQuizScore();
+}
+
+// Function to check short answer questions
+function submitShortAnswer(questionIndex, correctAnswer) {
+    const input = document.querySelector(`.quiz-question[data-question-index="${questionIndex}"] input[type="text"]`);
+    const userAnswer = input.value.trim().toLowerCase();
+    const normalizedCorrectAnswer = correctAnswer.toLowerCase();
+    
+    checkAnswer(questionIndex, userAnswer, normalizedCorrectAnswer);
+}
+
+// Function to handle Enter key in short answer
+function checkShortAnswer(questionIndex, correctAnswer, event) {
+    if (event.key === 'Enter') {
+        submitShortAnswer(questionIndex, correctAnswer);
+    }
+}
+
+// Function to update quiz score
+function updateQuizScore() {
+    const totalQuestions = document.querySelectorAll('.quiz-question').length;
+    const correctAnswers = document.querySelectorAll('.quiz-question.correct').length;
+    
+    const summaryDiv = document.getElementById('quiz-summary');
+    const scoreSpan = document.getElementById('quiz-score');
+    
+    scoreSpan.textContent = correctAnswers;
+    summaryDiv.classList.remove('hidden');
+}
+
+// Function to reset the quiz
+function resetQuiz() {
+    const questions = document.querySelectorAll('.quiz-question');
+    questions.forEach(question => {
+        // Reset classes
+        question.classList.remove('correct', 'incorrect');
+        
+        // Reset radio buttons
+        const radioInputs = question.querySelectorAll('input[type="radio"]');
+        radioInputs.forEach(input => input.checked = false);
+        
+        // Reset text inputs
+        const textInputs = question.querySelectorAll('input[type="text"]');
+        textInputs.forEach(input => input.value = '');
+        
+        // Hide feedback and explanation
+        const feedback = question.querySelector('.feedback');
+        const explanation = question.querySelector('.explanation');
+        feedback.classList.add('hidden');
+        explanation.classList.add('hidden');
+    });
+    
+    // Reset summary
+    const summaryDiv = document.getElementById('quiz-summary');
+    summaryDiv.classList.add('hidden');
 }
 
 // Add this function to handle showing/hiding explanations
