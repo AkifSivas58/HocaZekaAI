@@ -69,6 +69,7 @@ async function makeAPICall(endpoint, data) {
 // Generate explanation
 async function generateExplanation() {
     const topic = document.getElementById('explain-input').value.trim();
+    
     if (!topic) {
         alert('Please enter a topic');
         return;
@@ -332,7 +333,7 @@ function downloadContent() {
     const a = document.createElement('a');
     
     a.href = url;
-    a.download = `edugenius-${currentTab}-${new Date().toISOString().split('T')[0]}.txt`;
+    a.download = `hocazeka-${currentTab}-${new Date().toISOString().split('T')[0]}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
