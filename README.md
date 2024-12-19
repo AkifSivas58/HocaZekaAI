@@ -1,4 +1,4 @@
-# BTKAkademiHackathon
+# HocaZekaAI
 This repository contains the project developed during the BTK Akademi Hackathon, where the aim was to create an AI-powered, education-related product utilizing Gemini.
 
 ## Website live on
